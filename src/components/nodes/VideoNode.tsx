@@ -12,7 +12,7 @@ function VideoNode({ id, data }: NodeProps) {
       <div className="rounded-t-lg bg-orange-50 px-3 py-1.5 text-sm font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
         Video Generation
       </div>
-      <div className="space-y-3 p-3">
+      <div className="relative space-y-3 p-3">
         <select
           className="w-full rounded border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-800 outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
           value={data.model || 'Kling'}
@@ -35,16 +35,31 @@ function VideoNode({ id, data }: NodeProps) {
         >
           Generate
         </button>
+
+        {/* Input handles with labels */}
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="prompt-in"
+          style={{ top: '30%' }}
+          className="!h-3 !w-3 !bg-orange-500"
+        />
+        <span className="pointer-events-none absolute left-4 top-[28%] text-[10px] text-gray-500">文字</span>
+
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="image-in-1"
+          style={{ top: '65%' }}
+          className="!h-3 !w-3 !bg-orange-500"
+        />
+        <span className="pointer-events-none absolute left-4 top-[63%] text-[10px] text-gray-500">图片</span>
       </div>
 
       <Handle
-        type="target"
-        position={Position.Left}
-        className="!h-3 !w-3 !bg-orange-500"
-      />
-      <Handle
         type="source"
         position={Position.Right}
+        id="video-out"
         className="!h-3 !w-3 !bg-orange-500"
       />
     </div>

@@ -6,12 +6,14 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import TextNode from '@/components/nodes/TextNode';
 import ImageNode from '@/components/nodes/ImageNode';
 import VideoNode from '@/components/nodes/VideoNode';
+import ImageRefNode from '@/components/nodes/ImageRefNode';
 
 // 注册自定义节点类型
 const nodeTypes: NodeTypes = {
   text: TextNode,
   image: ImageNode,
   video: VideoNode,
+  imageRef: ImageRefNode,
 };
 
 export default function CanvasPage() {
@@ -56,6 +58,17 @@ export default function CanvasPage() {
     addNode(newNode);
   };
 
+  const handleAddImageRefNode = () => {
+    const id = `imageRef-${Date.now()}`;
+    const newNode: Node = {
+      id,
+      type: 'imageRef',
+      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      data: { url: '' },
+    };
+    addNode(newNode);
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* 顶部悬浮工具栏 */}
@@ -65,6 +78,12 @@ export default function CanvasPage() {
           className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
         >
           + 添加文本
+        </button>
+        <button
+          onClick={handleAddImageRefNode}
+          className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+        >
+          + 添加参考图
         </button>
         <button
           onClick={handleAddImageNode}
