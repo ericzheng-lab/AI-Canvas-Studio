@@ -1,11 +1,89 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { getConnectedData } from '@/lib/graphUtils';
 
 function ImageNode({ id, data }: NodeProps) {
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const abortRef = useRef(false);
+
+  const isLoading = data.status === 'generating';
+
+  const handleGenerate = async () => {
+    abortRef.current = false;
+    const store = useCanvasStore.getState();
+    const connected = getConnectedData(id, store.nodes, store.edges);
+
+    const prompt = connected.prompt || '';
+    const images = connected.images || [];
+    const model = data.model || 'Midjourney';
+
+    // Update status to loading
+    updateNodeData(id, { status: 'generating', error: undefined });
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt, images, aspect: '1:1' }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Generation failed');
+      }
+
+      // Async task (Midjourney) -> poll for status
+      if (result.taskId) {
+        const taskId = result.taskId;
+        const provider = result.provider;
+
+        for (let i = 0; i < 60; i++) {
+          if (abortRef.current) break;
+
+          await new Promise((resolve) => setTimeout(resolve, 8000));
+
+          if (abortRef.current) break;
+
+          const statusRes = await fetch(`/api/status?taskId=${taskId}&provider=${provider}`);
+          const statusData = await statusRes.json();
+
+          if (statusData.status === 'completed') {
+            updateNodeData(id, {
+              resultUrl: statusData.imageUrl,
+              status: 'completed',
+            });
+            return;
+          }
+
+          if (statusData.status === 'failure' || statusData.status === 'failed') {
+            throw new Error(statusData.message || 'Task failed');
+          }
+        }
+
+        throw new Error('Polling timeout');
+      }
+
+      // Synchronous result (NanoBanana, Seedream, GPT-Image, etc.)
+      if (result.resultUrl) {
+        updateNodeData(id, {
+          resultUrl: result.resultUrl,
+          status: 'completed',
+        });
+        return;
+      }
+
+      throw new Error('Unexpected response');
+    } catch (err: any) {
+      updateNodeData(id, {
+        status: 'error',
+        error: err.message || 'Unknown error',
+      });
+    }
+  };
 
   return (
     <div className="min-w-[220px] rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -34,18 +112,21 @@ function ImageNode({ id, data }: NodeProps) {
           </div>
         ) : (
           <div className="flex h-24 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 dark:border-gray-600 dark:bg-gray-800">
-            No Image Yet
+            {isLoading ? 'Generating...' : 'No Image Yet'}
           </div>
+        )}
+
+        {data.error && (
+          <div className="text-xs text-red-500">{data.error}</div>
         )}
 
         <button
           type="button"
-          className="w-full rounded bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
-          onClick={() => {
-            // UI placeholder - no API logic in this phase
-          }}
+          disabled={isLoading}
+          className="w-full rounded bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleGenerate}
         >
-          Generate
+          {isLoading ? 'Loading...' : 'Generate'}
         </button>
 
         {/* Input handles with labels */}
