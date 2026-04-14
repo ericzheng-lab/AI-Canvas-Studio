@@ -33,8 +33,13 @@ export function getConnectedData(
       // Text node - get the text value
       result.prompt = sourceNode.data?.text || '';
     } else if (targetHandle?.startsWith('image-in-')) {
-      // Image reference node - get the URL
-      const url = sourceNode.data?.url;
+      // Image reference node OR upstream image node - get the URL / resultUrl
+      let url: string | undefined;
+      if (sourceNode.type === 'image' || sourceNode.type === 'video') {
+        url = sourceNode.data?.resultUrl;
+      } else {
+        url = sourceNode.data?.url;
+      }
       if (url) {
         // Extract the index from image-in-1, image-in-2, etc.
         const index = parseInt(targetHandle.replace('image-in-', '')) - 1;

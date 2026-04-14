@@ -22,9 +22,19 @@ function VideoNode({ id, data }: NodeProps) {
           <option>Runway</option>
         </select>
 
-        <div className="flex h-24 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 dark:border-gray-600 dark:bg-gray-800">
-          No Video Yet
-        </div>
+        {data.resultUrl ? (
+          <div className="relative h-28 w-full overflow-hidden rounded border border-gray-200 dark:border-gray-700">
+            <video
+              src={data.resultUrl}
+              controls
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="flex h-24 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 dark:border-gray-600 dark:bg-gray-800">
+            No Video Yet
+          </div>
+        )}
 
         <button
           type="button"

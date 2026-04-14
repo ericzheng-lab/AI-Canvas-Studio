@@ -24,6 +24,7 @@ export default function CanvasPage() {
   const onEdgesChange = useCanvasStore((s) => s.onEdgesChange);
   const onConnect = useCanvasStore((s) => s.onConnect);
   const addNode = useCanvasStore((s) => s.addNode);
+  const clearCanvas = useCanvasStore((s) => s.clearCanvas);
 
   const handleAddTextNode = () => {
     const id = `text-${Date.now()}`;
@@ -96,6 +97,13 @@ export default function CanvasPage() {
           className="rounded-md bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
         >
           + 添加视频
+        </button>
+        <div className="mx-2 h-6 w-px bg-gray-300 dark:bg-gray-600" />
+        <button
+          onClick={clearCanvas}
+          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+        >
+          清空画布 (Clear)
         </button>
       </div>
 

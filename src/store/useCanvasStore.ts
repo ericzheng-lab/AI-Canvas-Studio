@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import {
   type Node,
   type Edge,
@@ -16,36 +17,48 @@ interface CanvasState {
   onConnect: (connection: Connection) => void;
   addNode: (node: Node) => void;
   updateNodeData: (nodeId: string, data: Record<string, any>) => void;
+  clearCanvas: () => void;
 }
 
-export const useCanvasStore = create<CanvasState>((set) => ({
-  nodes: [],
-  edges: [],
-  onNodesChange: (changes) => {
-    set((state) => ({
-      nodes: applyNodeChanges(changes, state.nodes),
-    }));
-  },
-  onEdgesChange: (changes) => {
-    set((state) => ({
-      edges: applyEdgeChanges(changes, state.edges),
-    }));
-  },
-  onConnect: (connection) => {
-    set((state) => ({
-      edges: addEdge(connection, state.edges),
-    }));
-  },
-  addNode: (node) => {
-    set((state) => ({
-      nodes: [...state.nodes, node],
-    }));
-  },
-  updateNodeData: (nodeId, data) => {
-    set((state) => ({
-      nodes: state.nodes.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
-      ),
-    }));
-  },
-}));
+export const useCanvasStore = create<CanvasState>()(
+  persist(
+    (set) => ({
+      nodes: [],
+      edges: [],
+      onNodesChange: (changes) => {
+        set((state) => ({
+          nodes: applyNodeChanges(changes, state.nodes),
+        }));
+      },
+      onEdgesChange: (changes) => {
+        set((state) => ({
+          edges: applyEdgeChanges(changes, state.edges),
+        }));
+      },
+      onConnect: (connection) => {
+        set((state) => ({
+          edges: addEdge(connection, state.edges),
+        }));
+      },
+      addNode: (node) => {
+        set((state) => ({
+          nodes: [...state.nodes, node],
+        }));
+      },
+      updateNodeData: (nodeId, data) => {
+        set((state) => ({
+          nodes: state.nodes.map((node) =>
+            node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
+          ),
+        }));
+      },
+      clearCanvas: () => {
+        set({ nodes: [], edges: [] });
+      },
+    }),
+    {
+      name: 'ai-canvas-studio-storage',
+      partialize: (state) => ({ nodes: state.nodes, edges: state.edges }),
+    }
+  )
+);
