@@ -5,7 +5,8 @@ const MODEL_MAP: Record<string, string> = {
   "nano-banana-pro": "nano-banana-pro",
   "nano-banana": "nano-banana-pro",
   "nanobanana": "nano-banana-pro",
-  
+  "nano-banana-pro-2k": "nano-banana-pro-2k",
+
   // Seedream
   "seedream-5": "doubao-seedream-5-0-260128",
   "seedream-5.0": "doubao-seedream-5-0-260128",
@@ -13,42 +14,52 @@ const MODEL_MAP: Record<string, string> = {
   "seedream-3": "seedream-3.0",
   "seedream-3.0": "seedream-3.0",
   "doubao-seedream": "doubao-seedream-3-0-t2i-250415",
-  
+
   // GPT Image
   "gpt-image": "gpt-image-1.5",
   "gpt-image-1": "gpt-image-1",
   "gpt-image-1.5": "gpt-image-1.5",
-  
+
   // Flux
   "flux": "flux",
   "flux-dev": "flux-dev",
   "flux-schnell": "flux-schnell",
-  
+
   // DALL-E
   "dall-e": "dall-e-3",
   "dall-e-3": "dall-e-3",
 };
 
-interface GenerateParams {
+export interface GenerateParams {
   prompt: string;
   model?: string;
   size?: string;
   images?: string[];
+  extraPayload?: Record<string, any>;
+  mode?: "generations" | "edits";
 }
 
 export async function generateCheapImage(params: GenerateParams, apiKey: string) {
-  const { prompt, model = "flux", size = "1024x1024", images = [] } = params;
+  const {
+    prompt,
+    model = "flux",
+    size = "1024x1024",
+    images = [],
+    extraPayload,
+    mode = "generations",
+  } = params;
   const mappedModel = MODEL_MAP[model] || model;
-  
-  const endpoint = `${BASE_URL}/images/generations`;
+
+  const endpoint = `${BASE_URL}/images/${mode}`;
   const body: any = {
     model: mappedModel,
     prompt,
     size,
     n: 1,
     response_format: "url",
+    ...(extraPayload || {}),
   };
-  
+
   if (images && images.length > 0) {
     body.image = images.slice(0, 4);
   }
@@ -57,7 +68,7 @@ export async function generateCheapImage(params: GenerateParams, apiKey: string)
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
@@ -68,7 +79,7 @@ export async function generateCheapImage(params: GenerateParams, apiKey: string)
   }
 
   const data = await response.json();
-  
+
   // Extract URL from response
   let imageUrl: string | undefined;
   if (data.data?.[0]?.url) {

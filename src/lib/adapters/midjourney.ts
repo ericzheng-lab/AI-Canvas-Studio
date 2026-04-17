@@ -1,5 +1,26 @@
 const MJ_BASE_URL = "https://api.bltcy.ai/mj-relax";
 
+export async function mjAction(params: { taskId: string; customId: string }, apiKey: string) {
+  const endpoint = `${MJ_BASE_URL}/mj/submit/action`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ taskId: params.taskId, customId: params.customId }),
+  });
+
+  const data = await response.json();
+  if (data.code !== 1) {
+    throw new Error(`MJ Action failed: ${data.description || JSON.stringify(data)}`);
+  }
+
+  return {
+    success: true,
+    taskId: String(data.result),
+    status: "submitted",
+    provider: "midjourney",
+  };
+}
+
 export async function mjImagine(params: { prompt: string; aspect?: string; images?: string[] }, apiKey: string) {
   const { prompt, aspect = "1:1", images = [] } = params;
   const endpoint = `${MJ_BASE_URL}/mj/submit/imagine`;

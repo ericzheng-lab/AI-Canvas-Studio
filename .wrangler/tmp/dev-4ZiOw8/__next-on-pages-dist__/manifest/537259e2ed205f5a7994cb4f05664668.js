@@ -1,0 +1,1 @@
+var _={},t=(s,e,a)=>(_.__NEXT_FONT_MANIFEST=s.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/drs/Documents/AI-Canvas-Studio/src/app/layout":["static/media/e4af272ccee01ff0-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}',_.__REACT_LOADABLE_MANIFEST=s.__REACT_LOADABLE_MANIFEST="{}",_);export{t as __getNamedExports};

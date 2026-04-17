@@ -8,9 +8,14 @@ function VideoNode({ id, data }: NodeProps) {
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
 
   return (
-    <div className="min-w-[220px] rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-      <div className="rounded-t-lg bg-orange-50 px-3 py-1.5 text-sm font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
-        Video Generation
+    <div className="min-w-[150px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex h-10 items-center gap-2 rounded-t-lg bg-orange-50 px-3 dark:bg-orange-900/30">
+        <span className="flex h-5 w-5 items-center justify-center rounded bg-orange-600 text-[10px] font-bold text-white">
+          🎬
+        </span>
+        <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+          Video Generation
+        </span>
       </div>
       <div className="relative space-y-3 p-3">
         <select
@@ -23,7 +28,7 @@ function VideoNode({ id, data }: NodeProps) {
         </select>
 
         {data.resultUrl ? (
-          <div className="relative h-28 w-full overflow-hidden rounded border border-gray-200 dark:border-gray-700">
+          <div className="relative aspect-square w-full overflow-hidden rounded border border-gray-200 dark:border-gray-700">
             <video
               src={data.resultUrl}
               controls
@@ -31,14 +36,14 @@ function VideoNode({ id, data }: NodeProps) {
             />
           </div>
         ) : (
-          <div className="flex h-24 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 dark:border-gray-600 dark:bg-gray-800">
+          <div className="flex aspect-square w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800">
             No Video Yet
           </div>
         )}
 
         <button
           type="button"
-          className="w-full rounded bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
+          className="w-full rounded bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
           onClick={() => {
             // UI placeholder - no API logic in this phase
           }}
