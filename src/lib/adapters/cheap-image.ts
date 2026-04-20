@@ -19,6 +19,7 @@ const MODEL_MAP: Record<string, string> = {
   "gpt-image": "gpt-image-1.5",
   "gpt-image-1": "gpt-image-1",
   "gpt-image-1.5": "gpt-image-1.5",
+  "gpt-image-2": "gpt-image-2",
 
   // Flux
   "flux": "flux",

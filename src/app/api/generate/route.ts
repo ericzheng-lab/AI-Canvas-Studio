@@ -66,8 +66,10 @@ export async function POST(request: NextRequest) {
       apiModelId = 'doubao-seedream-5-0-260128';
     } else if (apiModelId && apiModelId.toLowerCase().includes('banana')) {
       apiModelId = 'nano-banana-pro-2k';
-    } else if (apiModelId === 'GPT-Image 1.5' || apiModelId.toLowerCase().includes('gpt')) {
+    } else if (apiModelId === 'GPT-Image 1.5' || apiModelId.toLowerCase().includes('gpt-image-1')) {
       apiModelId = 'gpt-image-1.5';
+    } else if (apiModelId === 'GPT-Image 2' || apiModelId === 'gpt-image-2') {
+      apiModelId = 'gpt-image-2';
     } else if (apiModelId === 'bfl/flux-2-max') {
       apiModelId = 'bfl/flux-2-max';
     }
@@ -80,54 +82,83 @@ export async function POST(request: NextRequest) {
     if (apiModelId === 'bfl/flux-2-max') {
       // 解析 size 为 width/height
       const [width, height] = resolvedSize.split('x').map(Number);
-      
-      const apiPayload: any = {
-        model: 'bfl/flux-2-max',
-        prompt,
-        size: resolvedSize,
-        width,
-        height,
-        n: 1,
-        response_format: 'url',
-      };
-      if (images && images.length > 0) {
-        apiPayload.image = images.slice(0, 4);
-      }
 
-      const response = await fetch('https://api.bltcy.ai/v1/images/generations', {
+      // 第一步：提交任务
+      const submitRes = await fetch('https://api.bltcy.ai/bfl/v1/flux-2-max', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(apiPayload),
+        body: JSON.stringify({
+          prompt,
+          image_size: { width, height },
+          output_format: 'jpeg',
+          safety_tolerance: 2,
+        }),
       });
 
-      if (!response.ok) {
-        const errorDetail = await response.text();
-        console.error('[Flux-2-Max API Error]:', {
-          status: response.status,
-          statusText: response.statusText,
+      if (!submitRes.ok) {
+        const errorDetail = await submitRes.text();
+        console.error('[Flux-2-Max Submit Error]:', {
+          status: submitRes.status,
+          statusText: submitRes.statusText,
           errorDetail,
-          payload: apiPayload,
         });
-        throw new Error(`Flux-2-Max API error ${response.status}: ${errorDetail || response.statusText}`);
+        throw new Error(`Flux-2-Max submit error ${submitRes.status}: ${errorDetail || submitRes.statusText}`);
       }
 
-      const data = await response.json();
-      let imageUrl: string | undefined;
-      if (data.data?.[0]?.url) {
-        imageUrl = data.data[0].url;
-      } else if (data.data?.[0]?.b64_json) {
-        imageUrl = `data:image/png;base64,${data.data[0].b64_json}`;
-      } else if (data.url) {
-        imageUrl = data.url;
-      } else if (data.result?.url) {
-        imageUrl = data.result.url;
+      const submitData = await submitRes.json();
+      const taskId = submitData.id;
+
+      if (!taskId) {
+        throw new Error('Flux-2-Max submit returned no task id: ' + JSON.stringify(submitData));
+      }
+
+      // 第二步：轮询获取结果
+      let imageUrl: string | null = null;
+      let pollError: string | null = null;
+      const maxPolls = 60; // 最多轮询 60 次，每次 2 秒，共 120 秒
+
+      for (let i = 0; i < maxPolls; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+
+        const resultRes = await fetch(
+          `https://api.bltcy.ai/bfl/v1/get_result?id=${taskId}`,
+          { headers: { Authorization: `Bearer ${key}` } }
+        );
+
+        if (!resultRes.ok) {
+          const errorDetail = await resultRes.text();
+          console.error('[Flux-2-Max Poll Error]:', {
+            status: resultRes.status,
+            statusText: resultRes.statusText,
+            errorDetail,
+            taskId,
+          });
+          pollError = `Poll error ${resultRes.status}: ${errorDetail || resultRes.statusText}`;
+          break;
+        }
+
+        const resultData = await resultRes.json();
+
+        if (resultData.status === 'Ready') {
+          imageUrl = resultData.result?.sample || null;
+          break;
+        }
+
+        if (resultData.status === 'Error' || resultData.status === 'Failed') {
+          pollError = resultData.error || 'Task failed during generation';
+          break;
+        }
+      }
+
+      if (pollError) {
+        throw new Error(`Flux-2-Max generation failed: ${pollError}`);
       }
 
       if (!imageUrl) {
-        throw new Error('No image in Flux-2-Max response: ' + JSON.stringify(data));
+        throw new Error('Flux-2-Max polling timeout: image not ready after 120s');
       }
 
       return NextResponse.json({
@@ -229,6 +260,20 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // GPT-Image 2: generations 端点注入 image 数组
+      if (apiModelId === 'gpt-image-2') {
+        const result = await generateCheapImage(
+          { prompt, model: apiModelId, size: resolvedSize, images: [referenceImage] },
+          key
+        );
+        return NextResponse.json({
+          success: true,
+          resultUrl: result.resultUrl,
+          provider: result.provider,
+          model: result.model,
+        });
+      }
+
       // 兜底：明确不支持
       throw new Error(
         `${apiModelId} currently does not support image-to-image in this channel.`
@@ -236,6 +281,20 @@ export async function POST(request: NextRequest) {
     }
 
     // ========== 纯文生图分支 ==========
+    // Flux 基础款：直接调用 cheap-image 适配器
+    if (apiModelId === 'flux') {
+      const result = await generateCheapImage(
+        { prompt, model: apiModelId, size: resolvedSize, images },
+        key
+      );
+      return NextResponse.json({
+        success: true,
+        resultUrl: result.resultUrl,
+        provider: result.provider,
+        model: result.model,
+      });
+    }
+
     if (apiModelId === 'midjourney' || apiModelId === 'mj') {
       const result = await mjImagine({ prompt, images }, key);
       return NextResponse.json({

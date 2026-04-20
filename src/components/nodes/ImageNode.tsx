@@ -145,7 +145,6 @@ function ImageNode({ id, data, selected }: NodeProps) {
     <div
       ref={containerRef}
       className="min-w-[150px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
-      style={{ aspectRatio: cssAspectRatio }}
     >
       <NodeResizer
         minWidth={150}
@@ -172,9 +171,11 @@ function ImageNode({ id, data, selected }: NodeProps) {
           onChange={(e) => updateNodeData(id, { model: e.target.value })}
         >
           <option>bfl/flux-2-max</option>
+          <option>Flux</option>
           <option>Seedream 5</option>
           <option>Nano Banana 2K</option>
           <option>GPT-Image 1.5</option>
+          <option>GPT-Image 2</option>
         </select>
 
         {/* Aspect ratio toggle */}
