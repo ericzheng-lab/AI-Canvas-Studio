@@ -58,32 +58,35 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
       const edges = store.edges;
       const nodes = store.nodes;
 
-      // Find connected sketch and ref nodes
+      // Find connected text and ref nodes
       const inputEdges = edges.filter((e) => e.target === id);
-      let sketchUrl: string | undefined;
-      let referenceUrl: string | undefined;
+      let externalPrompt = '';
+      const refImages: string[] = [];
 
       for (const edge of inputEdges) {
         const sourceNode = nodes.find((n) => n.id === edge.source);
         if (!sourceNode) continue;
         const handle = edge.targetHandle;
-        if (handle === 'sketch-in') {
-          sketchUrl = sourceNode.data?.url;
-        } else if (handle === 'ref-in') {
-          referenceUrl = sourceNode.data?.url;
+        if (handle === 'text-in') {
+          externalPrompt = sourceNode.data?.text || '';
+        } else if (handle?.startsWith('ref-in-')) {
+          const url = sourceNode.data?.url || sourceNode.data?.resultUrl;
+          if (url) refImages.push(url);
         }
       }
+
+      const mergedPrompt = externalPrompt ? `${externalPrompt}\n${prompt}` : prompt;
 
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'GPT-Image-2',
-          prompt,
+          prompt: mergedPrompt,
           quality,
           size,
-          sketchUrl,
-          referenceUrl,
+          referenceImage: refImages[0],
+          images: refImages,
         }),
       });
 
@@ -221,20 +224,47 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
       <Handle
         type="target"
         position={Position.Left}
-        id="sketch-in"
-        style={{ top: '30%' }}
+        id="text-in"
+        style={{ top: '18%' }}
         className="!h-3 !w-3 !bg-amber-500"
       />
-      <span className="pointer-events-none absolute left-4 top-[28%] text-[10px] text-gray-500">Sketch</span>
+      <span className="pointer-events-none absolute left-4 top-[16%] text-[10px] text-gray-500">Prompt</span>
 
       <Handle
         type="target"
         position={Position.Left}
-        id="ref-in"
-        style={{ top: '55%' }}
+        id="ref-in-1"
+        style={{ top: '34%' }}
         className="!h-3 !w-3 !bg-amber-500"
       />
-      <span className="pointer-events-none absolute left-4 top-[53%] text-[10px] text-gray-500">Ref</span>
+      <span className="pointer-events-none absolute left-4 top-[32%] text-[10px] text-gray-500">Ref 1</span>
+
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="ref-in-2"
+        style={{ top: '50%' }}
+        className="!h-3 !w-3 !bg-amber-500"
+      />
+      <span className="pointer-events-none absolute left-4 top-[48%] text-[10px] text-gray-500">Ref 2</span>
+
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="ref-in-3"
+        style={{ top: '66%' }}
+        className="!h-3 !w-3 !bg-amber-500"
+      />
+      <span className="pointer-events-none absolute left-4 top-[64%] text-[10px] text-gray-500">Ref 3</span>
+
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="ref-in-4"
+        style={{ top: '82%' }}
+        className="!h-3 !w-3 !bg-amber-500"
+      />
+      <span className="pointer-events-none absolute left-4 top-[80%] text-[10px] text-gray-500">Ref 4</span>
 
       {/* Output handle */}
       <Handle
