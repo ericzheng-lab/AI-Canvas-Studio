@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       apiModelId = 'nano-banana-pro-2k';
     } else if (apiModelId === 'GPT-Image 1.5' || apiModelId.toLowerCase().includes('gpt-image-1')) {
       apiModelId = 'gpt-image-1.5';
-    } else if (apiModelId === 'GPT-Image 2' || apiModelId === 'gpt-image-2') {
+    } else if (apiModelId === 'GPT-Image 2' || apiModelId === 'GPT-Image-2' || apiModelId === 'gpt-image-2') {
       apiModelId = 'gpt-image-2';
     } else if (apiModelId === 'Flux' || apiModelId === 'flux') {
       apiModelId = 'flux';

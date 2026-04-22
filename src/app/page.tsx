@@ -25,7 +25,7 @@ const nodeTypes: NodeTypes = {
   gptimage: GPTImageNode,
 };
 
-export default function CanvasPage() {
+function CanvasInner() {
   const { screenToFlowPosition } = useReactFlow();
 
   const getCenterPosition = () => {
@@ -257,8 +257,7 @@ export default function CanvasPage() {
   };
 
   return (
-    <ReactFlowProvider>
-      <div className="relative w-screen h-screen overflow-hidden">
+    <div className="relative w-screen h-screen overflow-hidden">
       {/* 顶部悬浮工具栏 */}
       <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm dark:bg-black/80">
         {/* Undo / Redo */}
@@ -349,7 +348,14 @@ export default function CanvasPage() {
         <Background gap={16} size={1} />
         <Controls />
       </ReactFlow>
-      </div>
+    </div>
+  );
+}
+
+export default function CanvasPage() {
+  return (
+    <ReactFlowProvider>
+      <CanvasInner />
     </ReactFlowProvider>
   );
 }
