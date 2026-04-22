@@ -238,13 +238,13 @@ function SketchNode({ id, data, selected }: NodeProps) {
           ref={canvasRef}
           width={800}
           height={600}
-          className="h-full w-full cursor-crosshair touch-none"
+          className="h-full w-full cursor-crosshair touch-none nodrag"
           style={{ display: 'block' }}
-          onMouseDown={startDraw}
+          onMouseDown={(e) => { e.stopPropagation(); startDraw(e); }}
           onMouseMove={draw}
           onMouseUp={endDraw}
           onMouseLeave={endDraw}
-          onTouchStart={startDraw}
+          onTouchStart={(e) => { e.stopPropagation(); startDraw(e); }}
           onTouchMove={draw}
           onTouchEnd={endDraw}
         />

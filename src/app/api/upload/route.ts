@@ -103,7 +103,6 @@ export async function POST(request: NextRequest) {
       method: 'PUT',
       headers: {
         'Content-Type': file.type,
-        'Content-MD5': contentMd5,
         'Date': date,
         'Authorization': authorization,
         'x-oss-object-acl': 'public-read', // 设置为公共读

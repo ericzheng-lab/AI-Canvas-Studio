@@ -5,6 +5,7 @@ import { Handle, Position, type NodeProps } from 'reactflow';
 import { NodeResizer } from '@reactflow/node-resizer';
 import '@reactflow/node-resizer/dist/style.css';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { ImageLightbox } from '@/components/ui/ImageLightbox';
 
 const QUALITIES = ['low', 'medium', 'high'];
 
@@ -27,7 +28,9 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
   const [quality, setQuality] = useState(data.quality || 'medium');
   const [size, setSize] = useState(data.size || '2560x1440');
   const [isLoading, setIsLoading] = useState(false);
-  const [resultUrl, setResultUrl] = useState<string | null>(data.resultUrl || null);
+  const [results, setResults] = useState<string[]>(data.results || (data.resultUrl ? [data.resultUrl] : []));
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [error, setError] = useState<string | null>(data.error || null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [nodeWidth, setNodeWidth] = useState(400);
@@ -97,8 +100,10 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
       }
 
       const url = result.resultUrl;
-      setResultUrl(url);
-      updateNodeData(id, { resultUrl: url, status: 'completed', error: undefined });
+      const newResults = [...results, url];
+      setResults(newResults);
+      setCurrentIndex(newResults.length - 1);
+      updateNodeData(id, { results: newResults, resultUrl: url, status: 'completed', error: undefined });
     } catch (err: any) {
       const msg = err.message || 'Unknown error';
       setError(msg);
@@ -109,6 +114,7 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
   };
 
   const cssAspectRatio = getAspectRatio(size);
+  const currentImageUrl = results.length > 0 ? results[currentIndex] : undefined;
 
   return (
     <div
@@ -188,16 +194,50 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
         </div>
 
         {/* Image display */}
-        {resultUrl ? (
+        {currentImageUrl ? (
           <div
-            className="relative w-full overflow-hidden rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+            className="relative w-full overflow-hidden rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-pointer"
             style={{ aspectRatio: cssAspectRatio }}
+            onClick={() => setLightboxOpen(true)}
           >
             <img
-              src={resultUrl}
+              src={currentImageUrl}
               alt="Generated"
               className="h-full w-full object-contain"
             />
+
+            {/* Carousel arrows */}
+            {results.length > 1 && !isCompact && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex((i) => (i > 0 ? i - 1 : results.length - 1));
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex((i) => (i < results.length - 1 ? i + 1 : 0));
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white">
+                  {currentIndex + 1} / {results.length}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div
@@ -212,7 +252,7 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
 
         <button
           type="button"
-          disabled={isLoading || !prompt.trim()}
+          disabled={isLoading}
           className="w-full rounded bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleGenerate}
         >
@@ -273,6 +313,15 @@ function GPTImageNode({ id, data, selected }: NodeProps) {
         id="image-out"
         className="!h-3 !w-3 !bg-amber-500"
       />
+
+      {/* Lightbox */}
+      {lightboxOpen && results.length > 0 && (
+        <ImageLightbox
+          images={results}
+          initialIndex={currentIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }
