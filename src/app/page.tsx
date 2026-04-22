@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import ReactFlow, { Background, Controls, type Node, type NodeTypes } from 'reactflow';
+import ReactFlow, { Background, Controls, ReactFlowProvider, useReactFlow, type Node, type NodeTypes } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import TextNode from '@/components/nodes/TextNode';
@@ -26,6 +26,14 @@ const nodeTypes: NodeTypes = {
 };
 
 export default function CanvasPage() {
+  const { screenToFlowPosition } = useReactFlow();
+
+  const getCenterPosition = () => {
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    return screenToFlowPosition({ x: centerX, y: centerY });
+  };
+
   // 精准局部订阅
   const nodes = useCanvasStore((s) => s.nodes);
   const edges = useCanvasStore((s) => s.edges);
@@ -157,7 +165,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'text',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { text: '' },
       style: { width: 400, height: 300 },
     };
@@ -169,7 +177,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'image',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { model: 'bfl/flux-2-max', aspectRatio: '1:1' },
       style: { width: 400 },
     };
@@ -181,7 +189,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'video',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { model: 'Kling' },
       style: { width: 400 },
     };
@@ -193,7 +201,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'imageRef',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { url: '' },
       style: { width: 400 },
     };
@@ -205,7 +213,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'midjourney',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { prompt: '', viewMode: 'GRID' },
       style: { width: 400 },
     };
@@ -217,7 +225,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'stickyNote',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { text: '', fontSize: 16 },
       style: { width: 240, height: 240 },
     };
@@ -229,7 +237,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'sketch',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { color: '#1a1a1a', brushSize: 5 },
       style: { width: 400, height: 350 },
     };
@@ -241,7 +249,7 @@ export default function CanvasPage() {
     const newNode: Node = {
       id,
       type: 'gptimage',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: getCenterPosition(),
       data: { prompt: '', quality: 'medium', size: '2560x1440' },
       style: { width: 400 },
     };
@@ -249,7 +257,8 @@ export default function CanvasPage() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <ReactFlowProvider>
+      <div className="relative w-screen h-screen overflow-hidden">
       {/* 顶部悬浮工具栏 */}
       <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm dark:bg-black/80">
         {/* Undo / Redo */}
@@ -340,6 +349,7 @@ export default function CanvasPage() {
         <Background gap={16} size={1} />
         <Controls />
       </ReactFlow>
-    </div>
+      </div>
+    </ReactFlowProvider>
   );
 }

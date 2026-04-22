@@ -3,10 +3,10 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 
 // 阿里云 OSS 配置（从环境变量读取）
-const ACCESS_KEY_ID = process.env.OSS_ACCESS_KEY_ID || '';
-const ACCESS_KEY_SECRET = process.env.OSS_ACCESS_KEY_SECRET || '';
-const ENDPOINT = process.env.OSS_REGION || 'oss-cn-hangzhou.aliyuncs.com';
-const BUCKET_NAME = process.env.OSS_BUCKET || 'drs-88';
+const ACCESS_KEY_ID = process.env.ALIYUN_OSS_ACCESS_KEY_ID || '';
+const ACCESS_KEY_SECRET = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET || '';
+const ENDPOINT = process.env.ALIYUN_OSS_ENDPOINT || 'oss-cn-hangzhou.aliyuncs.com';
+const BUCKET_NAME = process.env.ALIYUN_OSS_BUCKET || 'drs-88';
 
 /**
  * 生成阿里云 OSS 签名
@@ -42,15 +42,7 @@ async function generateOSSSignature(
   return base64Signature;
 }
 
-/**
- * 计算文件 MD5（用于 Content-MD5 头）
- */
-async function calculateMD5(buffer: ArrayBuffer): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('MD5', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashBase64 = btoa(String.fromCharCode(...hashArray));
-  return hashBase64;
-}
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // 读取文件内容
     const arrayBuffer = await file.arrayBuffer();
-    const contentMd5 = await calculateMD5(arrayBuffer);
+    const contentMd5 = '';
     
     // 生成云端文件名
     const date = new Date().toUTCString();
