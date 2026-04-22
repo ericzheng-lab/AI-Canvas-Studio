@@ -11,6 +11,7 @@ import ImageRefNode from '@/components/nodes/ImageRefNode';
 import MidjourneyNode from '@/components/nodes/MidjourneyNode';
 import StickyNoteNode from '@/components/nodes/StickyNoteNode';
 import SketchNode from '@/components/nodes/SketchNode';
+import GPTImageNode from '@/components/nodes/GPTImageNode';
 
 // 注册自定义节点类型
 const nodeTypes: NodeTypes = {
@@ -21,6 +22,7 @@ const nodeTypes: NodeTypes = {
   midjourney: MidjourneyNode,
   stickyNote: StickyNoteNode,
   sketch: SketchNode,
+  gptimage: GPTImageNode,
 };
 
 export default function CanvasPage() {
@@ -234,6 +236,18 @@ export default function CanvasPage() {
     addNode(newNode);
   };
 
+  const handleAddGPTImageNode = () => {
+    const id = `gptimage-${Date.now()}`;
+    const newNode: Node = {
+      id,
+      type: 'gptimage',
+      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      data: { prompt: '', quality: 'medium', size: '2560x1440' },
+      style: { width: 400 },
+    };
+    addNode(newNode);
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* 顶部悬浮工具栏 */}
@@ -295,6 +309,12 @@ export default function CanvasPage() {
           className="rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-700 transition-colors"
         >
           + 添加 Sketch
+        </button>
+        <button
+          onClick={handleAddGPTImageNode}
+          className="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 transition-colors"
+        >
+          + 添加 GPT Image 2
         </button>
         <div className="mx-2 h-6 w-px bg-gray-300 dark:bg-gray-600" />
         <button

@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       aspect_ratio,
       aspectRatio,
       referenceImage,
+      sketchUrl,
+      referenceUrl,
       action,
       taskId: actionTaskId,
       customId,
@@ -286,23 +288,96 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // GPT-Image 2: generations 端点注入 image 数组
+      // GPT-Image 2: 支持 images.edit（有参考图）或 images.generations（无参考图）
       if (apiModelId === 'gpt-image-2') {
-        const result = await generateCheapImage(
-          { prompt, model: apiModelId, size: resolvedSize, images: [referenceImage] },
-          key
-        );
-        if (!result.success) {
-          return NextResponse.json(
-            { success: false, error: result.error, details: result.details },
-            { status: result.status || 500 }
-          );
+        const allRefImages = [
+          ...(referenceImage ? [referenceImage] : []),
+          ...(sketchUrl ? [sketchUrl] : []),
+          ...(referenceUrl ? [referenceUrl] : []),
+          ...(images || []),
+        ];
+        const hasRef = allRefImages.length > 0;
+        const allImages = allRefImages;
+
+        if (hasRef) {
+          // 有参考图 → 使用 images.edit
+          const formData = new FormData();
+          formData.append('model', 'gpt-image-2');
+          formData.append('prompt', prompt);
+          if (resolvedSize) formData.append('size', resolvedSize);
+          if (body.quality) formData.append('quality', body.quality);
+          formData.append('n', '1');
+
+          for (const imgUrl of allImages) {
+            try {
+              const imgRes = await fetch(imgUrl);
+              if (!imgRes.ok) throw new Error(`Failed to fetch image: ${imgUrl}`);
+              const blob = await imgRes.blob();
+              const file = new File([blob], 'image.png', { type: blob.type || 'image/png' });
+              formData.append('image[]', file);
+            } catch (fetchErr: any) {
+              console.warn('[gpt-image-2] Failed to fetch reference image:', imgUrl, fetchErr.message);
+            }
+          }
+
+          const editRes = await fetch('https://api.bltcy.ai/v1/images/edits', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${key}`,
+            },
+            body: formData,
+          });
+
+          if (!editRes.ok) {
+            const errText = await editRes.text();
+            throw new Error(`GPT-Image-2 edit error ${editRes.status}: ${errText}`);
+          }
+
+          const editData = await editRes.json();
+          const imageUrl = editData.data?.[0]?.url;
+          if (!imageUrl) throw new Error('GPT-Image-2 edit returned no image URL');
+
+          return NextResponse.json({
+            success: true,
+            resultUrl: imageUrl,
+            provider: 'bltcy',
+            model: 'gpt-image-2',
+          });
         }
+
+        // 无参考图 → 使用 images.generations
+        const genBody: any = {
+          model: 'gpt-image-2',
+          prompt,
+          size: resolvedSize,
+          n: 1,
+          response_format: 'url',
+        };
+        if (body.quality) genBody.quality = body.quality;
+
+        const genRes = await fetch('https://api.bltcy.ai/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(genBody),
+        });
+
+        if (!genRes.ok) {
+          const errText = await genRes.text();
+          throw new Error(`GPT-Image-2 generation error ${genRes.status}: ${errText}`);
+        }
+
+        const genData = await genRes.json();
+        const imageUrl = genData.data?.[0]?.url;
+        if (!imageUrl) throw new Error('GPT-Image-2 generation returned no image URL');
+
         return NextResponse.json({
           success: true,
-          resultUrl: result.resultUrl,
-          provider: result.provider,
-          model: result.model,
+          resultUrl: imageUrl,
+          provider: 'bltcy',
+          model: 'gpt-image-2',
         });
       }
 
