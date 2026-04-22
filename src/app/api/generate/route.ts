@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
       apiModelId = 'gpt-image-1.5';
     } else if (apiModelId === 'GPT-Image 2' || apiModelId === 'gpt-image-2') {
       apiModelId = 'gpt-image-2';
+    } else if (apiModelId === 'Flux' || apiModelId === 'flux') {
+      apiModelId = 'flux';
     } else if (apiModelId === 'bfl/flux-2-max') {
       apiModelId = 'bfl/flux-2-max';
     }
@@ -200,6 +202,12 @@ export async function POST(request: NextRequest) {
             },
             key
           );
+          if (!result.success) {
+            return NextResponse.json(
+              { success: false, error: result.error, details: result.details },
+              { status: result.status || 500 }
+            );
+          }
           return NextResponse.json({
             success: true,
             resultUrl: result.resultUrl,
@@ -220,6 +228,12 @@ export async function POST(request: NextRequest) {
               },
               key
             );
+            if (!result.success) {
+              return NextResponse.json(
+                { success: false, error: result.error, details: result.details },
+                { status: result.status || 500 }
+              );
+            }
             return NextResponse.json({
               success: true,
               resultUrl: result.resultUrl,
@@ -238,6 +252,12 @@ export async function POST(request: NextRequest) {
           { prompt, model: apiModelId, size: resolvedSize, images: [referenceImage] },
           key
         );
+        if (!result.success) {
+          return NextResponse.json(
+            { success: false, error: result.error, details: result.details },
+            { status: result.status || 500 }
+          );
+        }
         return NextResponse.json({
           success: true,
           resultUrl: result.resultUrl,
@@ -252,6 +272,12 @@ export async function POST(request: NextRequest) {
           { prompt, model: apiModelId, size: resolvedSize, images: [referenceImage] },
           key
         );
+        if (!result.success) {
+          return NextResponse.json(
+            { success: false, error: result.error, details: result.details },
+            { status: result.status || 500 }
+          );
+        }
         return NextResponse.json({
           success: true,
           resultUrl: result.resultUrl,
@@ -266,6 +292,12 @@ export async function POST(request: NextRequest) {
           { prompt, model: apiModelId, size: resolvedSize, images: [referenceImage] },
           key
         );
+        if (!result.success) {
+          return NextResponse.json(
+            { success: false, error: result.error, details: result.details },
+            { status: result.status || 500 }
+          );
+        }
         return NextResponse.json({
           success: true,
           resultUrl: result.resultUrl,
@@ -287,6 +319,12 @@ export async function POST(request: NextRequest) {
         { prompt, model: apiModelId, size: resolvedSize, images },
         key
       );
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error, details: result.details },
+          { status: result.status || 500 }
+        );
+      }
       return NextResponse.json({
         success: true,
         resultUrl: result.resultUrl,
@@ -330,6 +368,12 @@ export async function POST(request: NextRequest) {
       { prompt, model: apiModelId, size: resolvedSize, images, extraPayload: apiPayload },
       key
     );
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error, details: result.details },
+        { status: result.status || 500 }
+      );
+    }
     return NextResponse.json({
       success: true,
       resultUrl: result.resultUrl,

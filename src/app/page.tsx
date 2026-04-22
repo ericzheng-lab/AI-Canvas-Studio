@@ -10,6 +10,7 @@ import VideoNode from '@/components/nodes/VideoNode';
 import ImageRefNode from '@/components/nodes/ImageRefNode';
 import MidjourneyNode from '@/components/nodes/MidjourneyNode';
 import StickyNoteNode from '@/components/nodes/StickyNoteNode';
+import SketchNode from '@/components/nodes/SketchNode';
 
 // 注册自定义节点类型
 const nodeTypes: NodeTypes = {
@@ -19,6 +20,7 @@ const nodeTypes: NodeTypes = {
   imageRef: ImageRefNode,
   midjourney: MidjourneyNode,
   stickyNote: StickyNoteNode,
+  sketch: SketchNode,
 };
 
 export default function CanvasPage() {
@@ -220,6 +222,18 @@ export default function CanvasPage() {
     addNode(newNode);
   };
 
+  const handleAddSketchNode = () => {
+    const id = `sketch-${Date.now()}`;
+    const newNode: Node = {
+      id,
+      type: 'sketch',
+      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      data: { color: '#1a1a1a', brushSize: 5 },
+      style: { width: 400, height: 350 },
+    };
+    addNode(newNode);
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* 顶部悬浮工具栏 */}
@@ -275,6 +289,12 @@ export default function CanvasPage() {
           className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-bold text-amber-900 hover:bg-amber-300 transition-colors"
         >
           + 添加便签
+        </button>
+        <button
+          onClick={handleAddSketchNode}
+          className="rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-700 transition-colors"
+        >
+          + 添加 Sketch
         </button>
         <div className="mx-2 h-6 w-px bg-gray-300 dark:bg-gray-600" />
         <button
